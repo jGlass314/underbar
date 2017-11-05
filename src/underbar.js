@@ -100,13 +100,35 @@
   // Produce a duplicate-free version of the array.
   _.uniq = function(array, isSorted, iterator) {
 
-    var result = array.slice();
-    if(!isSorted)
-      result.sort();
-    if(iterator)
-      for(var i = 0; i < result.length; i++)
-        result[i] = iterator(result[i]);
-    return result;
+    var map = array.slice();
+    var mapResult = [];
+    if(iterator) {
+      for(var i = 0; i < map.length; i++)
+        map[i] = iterator(map[i]);
+    }
+    // now eliminate the duplicates of the transformed array
+    if(iterator) {
+      for(var i = map.length-1; i >= 0; i--) {
+        var isDup = false;
+        for(var j = i-1; j >= 0; j--) {
+          if(map[i] === map[j]) {
+            isDup = true;
+            break;
+          }
+        }
+        if(!isDup)
+          mapResult.unshift(array[i]);
+      }
+    } else {
+      if(!isSorted)
+        map.sort();
+      mapResult.push(map[0])
+      for(var i = 1; i < map.length; i++) {
+        if(map[i] !== map[i-1])
+          mapResult.push(map[i]);
+      }
+    }
+    return mapResult;
   };
 
 
@@ -116,14 +138,9 @@
     // like each(), but in addition to running the operation on all
     // the members, it also maintains an array of results.
     var result = [];
-    if(Array.isArray(collection)) {
-      for(var i = 0; i < collection.length; i++)
-        result.push(iterator(collection[i]));
-    }
-    else {
-      for(var key in collection)
-        result.push(iterator(collection[key]));
-    }
+    _.each(collection, function(value, key, collection) {
+      result.push(iterator(value, key, collection));
+    });
     return result;
   };
 
